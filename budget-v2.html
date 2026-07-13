@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Vann's Family Budget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg: #F6F7FA;
+    --surface: #FFFFFF;
+    --surface-soft: #FBFBFD;
+    --ink: #14181F;
+    --ink-soft: #667085;
+    --ink-faint: #98A2B3;
+    --border: #E7E9EF;
+    --primary: #3E4CE8;
+    --primary-soft: #EEF0FE;
+    --primary-dark: #2E39C4;
+    --success: #129A6B;
+    --success-soft: #E7F7EF;
+    --warning: #B7791F;
+    --warning-soft: #FDF3E0;
+    --danger: #E4433B;
+    --danger-soft: #FCEAE9;
+    --shadow-sm: 0 1px 2px rgba(20,24,31,0.05);
+    --shadow-md: 0 4px 16px rgba(20,24,31,0.07);
+    --shadow-lg: 0 12px 32px rgba(20,24,31,0.12);
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--primary-soft); color:var(--primary-dark); }
+
+  .app{ max-width:900px; margin:0 auto; padding:36px 24px 60px; }
+
+  header.top{ margin-bottom:24px; }
+  .brand-row{ display:flex; align-items:center; gap:12px; }
+  .brand-mark{
+    width:40px; height:40px; border-radius:11px;
+    background:linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-family:'Plus Jakarta Sans', sans-serif; font-weight:800; font-size:17px;
+    flex-shrink:0;
+    box-shadow:var(--shadow-sm);
+  }
+  h1.brand{
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:26px;
+    font-weight:800;
+    margin:0;
+    letter-spacing:-0.4px;
+    color:var(--ink);
+  }
+  .brand-sub{ font-size:13.5px; color:var(--ink-soft); margin-top:3px; }
+
+  .sheets-status{
+    display:flex; align-items:center; gap:10px; margin-top:16px;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:12px 16px; box-shadow:var(--shadow-sm);
+  }
+  .sheets-status .dot-lg{ width:9px; height:9px; border-radius:50%; background:var(--ink-faint); flex-shrink:0; }
+  .sheets-status .dot-lg.on{ background:var(--success); }
+  .sheets-status .dot-lg.off{ background:var(--warning); }
+  .sheets-status-text{ font-size:12.5px; color:var(--ink-soft); flex:1; }
+  .sheets-status-text b{ color:var(--ink); }
+
+  /* Summary cards */
+  .summary-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:14px;
+    margin:26px 0 8px;
+  }
+  @media (max-width:640px){ .summary-grid{ grid-template-columns:1fr; } }
+  .summary-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px 20px;
+    box-shadow:var(--shadow-sm);
+  }
+  .summary-label{
+    font-size:12px;
+    color:var(--ink-soft);
+    font-weight:600;
+    margin-bottom:6px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .summary-value{
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:23px;
+    font-weight:800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing:-0.3px;
+  }
+  .summary-value.danger{ color:var(--danger); }
+  .summary-value.primary{ color:var(--primary-dark); }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot.danger{ background:var(--danger); }
+  .dot.primary{ background:var(--primary); }
+  .dot.neutral{ background:var(--ink-faint); }
+
+  /* Tabs — segmented control */
+  nav.tabs{
+    display:inline-flex;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:4px;
+    margin:22px 0 22px;
+    gap:2px;
+    box-shadow:var(--shadow-sm);
+  }
+  .tab-btn{
+    font-family:'Inter', sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    padding:9px 16px;
+    background:transparent;
+    border:none;
+    border-radius:9px;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .tab-btn.active{ background:var(--primary); color:#fff; }
+  .tab-btn:hover:not(.active){ color:var(--ink); background:var(--surface-soft); }
+
+  main{ min-height:400px; }
+
+  h2.section-title{
+    font-family:'Plus Jakarta Sans', sans-serif;
+    font-size:19px;
+    font-weight:700;
+    margin:0 0 3px 0;
+    letter-spacing:-0.3px;
+  }
+  .section-sub{ font-size:13px; color:var(--ink-soft); margin-bottom:20px; }
+
+  .btn{
+    font-family:'Inter', sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:10px;
+    border:1px solid var(--primary);
+    background:var(--primary);
+    color:#fff;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  .btn:hover{ background:var(--primary-dark); }
+  .btn.outline{ background:var(--surface); color:var(--ink); border:1px solid var(--border); }
+  .btn.outline:hover{ border-color:var(--ink-faint); background:var(--surface-soft); }
+  .btn.small{ padding:6px 12px; font-size:12.5px; border-radius:8px; }
+  .btn.danger{ border-color:var(--danger); background:var(--danger); }
+  .btn.danger:hover{ background:#C5352E; }
+
+  .row-actions{ display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; }
+
+  /* Bill list — cards instead of table */
+  .bill-list{ display:flex; flex-direction:column; gap:10px; }
+  .bill-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:4px solid var(--ink-faint);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    box-shadow:var(--shadow-sm);
+  }
+  .bill-card.overdue{ border-left-color:var(--danger); }
+  .bill-card.soon{ border-left-color:var(--warning); }
+  .bill-card.paid{ border-left-color:var(--success); opacity:0.75; }
+
+  .bill-main{ flex:1; min-width:180px; }
+  .bill-payee{ font-weight:700; font-size:14.5px; margin-bottom:4px; }
+  .bill-tags{ display:flex; gap:6px; flex-wrap:wrap; }
+  .tag{
+    font-size:11px; font-weight:600; color:var(--ink-soft);
+    background:var(--surface-soft); border:1px solid var(--border);
+    padding:2px 9px; border-radius:20px;
+  }
+  .bill-due-amt{ text-align:right; min-width:120px; }
+  .bill-due{ font-size:12.5px; color:var(--ink-soft); margin-bottom:2px; }
+  .bill-amt{ font-family:'Plus Jakarta Sans', sans-serif; font-weight:800; font-size:16px; font-variant-numeric: tabular-nums; }
+  .status-pill{
+    font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px;
+    text-transform:uppercase; letter-spacing:0.3px; display:inline-block;
+  }
+  .status-pill.overdue{ background:var(--danger-soft); color:var(--danger); }
+  .status-pill.soon{ background:var(--warning-soft); color:var(--warning); }
+  .status-pill.upcoming{ background:var(--primary-soft); color:var(--primary-dark); }
+  .status-pill.paid{ background:var(--success-soft); color:var(--success); }
+  .bill-actions{ display:flex; gap:6px; }
+
+  .empty-state{
+    text-align:center; padding:56px 20px; color:var(--ink-soft);
+    background:var(--surface); border:1px dashed var(--border); border-radius:var(--radius);
+  }
+  .empty-state .glyph{ font-size:30px; margin-bottom:10px; }
+
+  /* Modal */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(20,24,31,0.45);
+    display:none; align-items:flex-start; justify-content:center;
+    padding:40px 16px; overflow-y:auto; z-index:50;
+    backdrop-filter:blur(2px);
+  }
+  .modal-backdrop.open{ display:flex; }
+  .modal{
+    background:var(--surface); border-radius:16px; max-width:560px; width:100%;
+    padding:26px; box-shadow:var(--shadow-lg); border:1px solid var(--border);
+  }
+  .modal h3{ font-family:'Plus Jakarta Sans', sans-serif; margin:0 0 4px 0; font-size:18px; font-weight:800; }
+  .modal .modal-sub{ font-size:12.5px; color:var(--ink-soft); margin-bottom:18px; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; }
+  .field input, .field select, .field textarea{
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:9px;
+    background:var(--surface-soft); font-family:'Inter', sans-serif; font-size:13.5px; color:var(--ink);
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:2px solid var(--primary-soft); border-color:var(--primary); }
+  .field textarea{ font-family:'Inter', monospace; font-size:12px; min-height:140px; resize:vertical; }
+  .field-row{ display:flex; gap:12px; }
+  .field-row .field{ flex:1; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+  .modal-tabs{ display:flex; gap:8px; margin-bottom:16px; }
+  .modal-tab-btn{
+    font-size:12px; font-weight:600; padding:7px 13px; border-radius:20px;
+    border:1px solid var(--border); background:var(--surface); cursor:pointer; color:var(--ink-soft);
+  }
+  .modal-tab-btn.active{ background:var(--ink); color:#fff; border-color:var(--ink); }
+  .hint{ font-size:11.5px; color:var(--ink-soft); margin-top:6px; line-height:1.5; }
+  .import-error{ color:var(--danger); font-size:12px; margin-top:6px; }
+
+  /* Paycheck cards */
+  .paycheck-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; margin-bottom:14px; box-shadow:var(--shadow-sm);
+  }
+  .paycheck-head{ display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px; }
+  .paycheck-title{ font-weight:700; font-size:14.5px; }
+  .paycheck-amt{ font-family:'Plus Jakarta Sans', sans-serif; font-size:18px; font-weight:800; }
+  .paycheck-meta{ font-size:12px; color:var(--ink-soft); margin-top:2px; }
+  .coverage-bar{ height:8px; background:var(--surface-soft); border:1px solid var(--border); border-radius:6px; margin-top:14px; overflow:hidden; }
+  .coverage-fill{ height:100%; background:var(--success); }
+  .coverage-fill.over{ background:var(--danger); }
+  .coverage-text{ font-size:12px; margin-top:7px; color:var(--ink-soft); }
+  .coverage-bills{ margin-top:10px; font-size:12.5px; }
+  .coverage-bills .cb-item{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); }
+  .coverage-bills .cb-item:last-child{ border-bottom:none; }
+
+  /* Calendar */
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .cal-head .month-label{ font-family:'Plus Jakarta Sans', sans-serif; font-size:17px; font-weight:800; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+  .cal-dow{ font-size:11px; font-weight:600; color:var(--ink-soft); text-align:center; padding-bottom:6px; }
+  .cal-day{
+    min-height:66px; border:1px solid var(--border); border-radius:10px; padding:7px;
+    background:var(--surface); font-size:12px; cursor:pointer; position:relative;
+  }
+  .cal-day.pad{ background:transparent; border:none; cursor:default; }
+  .cal-day:hover:not(.pad){ border-color:var(--primary); }
+  .cal-day .dnum{ font-weight:700; color:var(--ink-soft); }
+  .cal-day.today{ background:var(--primary-soft); border-color:var(--primary); }
+  .cal-day.today .dnum{ color:var(--primary-dark); }
+  .cal-dot{ width:6px; height:6px; border-radius:50%; display:inline-block; margin:3px 2px 0 0; }
+  .cal-dot.bill{ background:var(--danger); }
+  .cal-dot.pay{ background:var(--success); }
+
+  footer.foot{ text-align:center; font-size:11.5px; color:var(--ink-faint); margin-top:36px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="brand-row">
+      <div class="brand-mark">V</div>
+      <div>
+        <h1 class="brand">The Vann's Family Budget</h1>
+        <div class="brand-sub">Bills, debts, and paychecks, all in one place.</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="sheets-status" id="sheetsStatus"></div>
+
+  <div class="summary-grid" id="ticker"></div>
+
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" data-tab="bills">Bills</button>
+    <button class="tab-btn" data-tab="paychecks">Paychecks</button>
+    <button class="tab-btn" data-tab="calendar">Calendar</button>
+  </nav>
+
+  <main id="main"></main>
+
+  <footer class="foot">Saved in this browser, and synced to Google Sheets once connected · nothing else is shared</footer>
+</div>
+
+<!-- Bill Modal -->
+<div class="modal-backdrop" id="billModalBackdrop">
+  <div class="modal">
+    <h3 id="billModalTitle">Add a Bill</h3>
+    <div class="modal-sub">Enter it by hand, or paste in what Claude read from a photo.</div>
+    <div class="modal-tabs">
+      <button class="modal-tab-btn active" id="manualTabBtn">Manual entry</button>
+      <button class="modal-tab-btn" id="importTabBtn">Import from Claude</button>
+    </div>
+
+    <div id="manualPane">
+      <div class="field-row">
+        <div class="field"><label>Payee / Bill name</label><input id="f-payee" placeholder="e.g. Georgia Power"></div>
+        <div class="field"><label>Amount ($)</label><input id="f-amount" type="number" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Due date</label><input id="f-due" type="date"></div>
+        <div class="field"><label>Repeats</label>
+          <select id="f-recurrence">
+            <option value="none">One-time</option>
+            <option value="weekly">Weekly</option>
+            <option value="biweekly">Every 2 weeks</option>
+            <option value="monthly" selected>Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Category</label>
+          <select id="f-category">
+            <option>Utilities</option><option>Rent/Mortgage</option><option>Debt Payment</option>
+            <option>Insurance</option><option>Subscription</option><option>Credit Card</option>
+            <option>Loan</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Notes (optional)</label><input id="f-notes" placeholder="account #, min payment, etc."></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn outline" id="billCancelBtn">Cancel</button>
+        <button class="btn" id="billSaveBtn">Save Bill</button>
+      </div>
+    </div>
+
+    <div id="importPane" style="display:none;">
+      <div class="field">
+        <label>Paste JSON from Claude</label>
+        <textarea id="f-import" placeholder='[{"payee":"Georgia Power","amount":142.50,"dueDate":"2026-07-20","recurrence":"monthly","category":"Utilities","notes":""}]'></textarea>
+        <div class="hint">Upload a photo of a bill in the chat and ask Claude to identify it as a JSON array with these fields: payee, amount, dueDate (YYYY-MM-DD), recurrence (none/weekly/biweekly/monthly/yearly), category, notes. Paste the result here.</div>
+        <div class="import-error" id="importError"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn outline" id="importCancelBtn">Cancel</button>
+        <button class="btn" id="importSaveBtn">Import Bills</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Paycheck Modal -->
+<div class="modal-backdrop" id="payModalBackdrop">
+  <div class="modal">
+    <h3>Add a Paycheck</h3>
+    <div class="modal-sub">Log when money comes in so we can line it up against what's due.</div>
+    <div class="field-row">
+      <div class="field"><label>Source</label><input id="p-source" placeholder="e.g. Main job"></div>
+      <div class="field"><label>Amount ($)</label><input id="p-amount" type="number" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="field"><label>Pay date</label><input id="p-date" type="date"></div>
+    <div class="modal-actions">
+      <button class="btn outline" id="payCancelBtn">Cancel</button>
+      <button class="btn" id="paySaveBtn">Save Paycheck</button>
+    </div>
+  </div>
+</div>
+
+<!-- Day detail modal -->
+<div class="modal-backdrop" id="dayModalBackdrop">
+  <div class="modal">
+    <h3 id="dayModalTitle">Day</h3>
+    <div id="dayModalBody"></div>
+    <div class="modal-actions">
+      <button class="btn outline" id="dayCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let state = { bills: [], paychecks: [] };
+let activeTab = 'dashboard';
+let calMonth = new Date().getMonth();
+let calYear = new Date().getFullYear();
+let editingBillId = null;
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function fmtMoney(n){ return '$' + Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtDate(d){
+  const dt = new Date(d+'T00:00:00');
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function daysBetween(a,b){
+  return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000);
+}
+
+// ================= GOOGLE SHEETS CONFIG =================
+// Paste your own values here (see the setup steps Claude gave you).
+// Until both are filled in, the app just runs on local browser storage.
+const GOOGLE_CLIENT_ID = '628928998895-uti3d3e2kggrk2uc0f4fmikoiijf6jng.apps.googleusercontent.com';
+const SPREADSHEET_ID   = '1fp4YV4M52RY8lJFaprOxp0AZWgmObxHL51fWCnLOvZA';
+// ==========================================================
+
+const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+const BILLS_RANGE = 'Bills!A2:H';
+const PAYCHECKS_RANGE = 'Paychecks!A2:D';
+const STORAGE_KEY = 'vanns-family-budget-data';
+
+let tokenClient = null;
+let accessToken = null;
+let sheetsConnected = false;
+let sheetsError = null;
+
+function isSheetsConfigured(){
+  return GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.startsWith('PASTE_') &&
+         SPREADSHEET_ID && !SPREADSHEET_ID.startsWith('PASTE_');
+}
+
+// ---------- Local cache (always used as a fallback / offline copy) ----------
+function loadLocalCache(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ state = JSON.parse(raw); }
+  }catch(e){ console.error('Local load failed', e); }
+  if(!state.bills) state.bills = [];
+  if(!state.paychecks) state.paychecks = [];
+}
+function saveLocalCache(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.error('Local save failed', e); }
+}
+
+// ---------- Top-level load/save used by the rest of the app ----------
+async function loadState(){
+  loadLocalCache();
+  if(isSheetsConfigured()){
+    initGoogleAuth();
+  }
+}
+async function saveState(){
+  saveLocalCache();
+  if(sheetsConnected){ await pushToSheets(); }
+}
+
+// ---------- Google sign-in ----------
+function initGoogleAuth(){
+  if(tokenClient || !window.google || !window.google.accounts) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: SHEETS_SCOPE,
+    callback: async (resp)=>{
+      if(resp.error){
+        sheetsError = 'Sign-in was cancelled or failed.';
+        renderSheetsStatus();
+        return;
+      }
+      accessToken = resp.access_token;
+      sheetsConnected = true;
+      sheetsError = null;
+      renderSheetsStatus();
+      await pullFromSheets();
+      render();
+    }
+  });
+  renderSheetsStatus();
+}
+function connectSheets(){
+  if(!isSheetsConfigured()){
+    alert('Add your Google Client ID and Spreadsheet ID at the top of the code first — see the setup steps.');
+    return;
+  }
+  if(!tokenClient) initGoogleAuth();
+  if(tokenClient) tokenClient.requestAccessToken();
+}
+
+// ---------- Sheets API ----------
+async function sheetsFetch(range, method, body){
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}`;
+  const url = method==='PUT' ? base + '?valueInputOption=RAW' : base;
+  const res = await fetch(url, {
+    method: method || 'GET',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type':'application/json' },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if(!res.ok){
+    const text = await res.text().catch(()=> '');
+    throw new Error(`Sheets API ${res.status}: ${text.slice(0,200)}`);
+  }
+  return res.json();
+}
+
+async function pullFromSheets(){
+  try{
+    const bills = await sheetsFetch(BILLS_RANGE, 'GET');
+    const pays = await sheetsFetch(PAYCHECKS_RANGE, 'GET');
+    state.bills = (bills.values||[]).filter(r=>r[0]).map(r=>({
+      id:r[0], payee:r[1]||'', amount:Number(r[2])||0, dueDate:r[3]||'',
+      recurrence:r[4]||'none', category:r[5]||'Other', notes:r[6]||'', lastPaidDate:r[7]||null
+    }));
+    state.paychecks = (pays.values||[]).filter(r=>r[0]).map(r=>({
+      id:r[0], source:r[1]||'', amount:Number(r[2])||0, date:r[3]||''
+    }));
+    saveLocalCache();
+    sheetsError = null;
+  }catch(e){
+    console.error('Pull failed', e);
+    sheetsError = 'Could not load from Google Sheets — check the Sheet ID and that the tabs/headers are set up correctly.';
+  }
+  renderSheetsStatus();
+}
+
+async function pushToSheets(){
+  if(!accessToken) return;
+  try{
+    const billRows = state.bills.map(b=>[b.id,b.payee,b.amount,b.dueDate,b.recurrence,b.category,b.notes||'',b.lastPaidDate||'']);
+    const payRows = state.paychecks.map(p=>[p.id,p.source,p.amount,p.date]);
+    await sheetsFetch(BILLS_RANGE, 'PUT', { range: BILLS_RANGE, majorDimension:'ROWS', values: billRows.length ? billRows : [['','','','','','','','']] });
+    await sheetsFetch(PAYCHECKS_RANGE, 'PUT', { range: PAYCHECKS_RANGE, majorDimension:'ROWS', values: payRows.length ? payRows : [['','','','']] });
+    sheetsError = null;
+  }catch(e){
+    console.error('Push failed', e);
+    sheetsError = 'Could not save to Google Sheets. Your changes are still safe in this browser — try reconnecting.';
+  }
+  renderSheetsStatus();
+}
+
+function renderSheetsStatus(){
+  const el = document.getElementById('sheetsStatus');
+  if(!el) return;
+  if(!isSheetsConfigured()){
+    el.innerHTML = `
+      <span class="dot-lg off"></span>
+      <span class="sheets-status-text">Running on <b>local browser storage</b> only. Add a Google Client ID and Sheet ID in the code to enable live sync.</span>
+    `;
+    return;
+  }
+  if(sheetsConnected){
+    el.innerHTML = `
+      <span class="dot-lg on"></span>
+      <span class="sheets-status-text"><b>Connected</b> — syncing with Google Sheets.${sheetsError ? ' ⚠ '+sheetsError : ''}</span>
+      <button class="btn small outline" id="syncNowBtn">Sync Now</button>
+    `;
+    document.getElementById('syncNowBtn').onclick = async ()=>{ await pullFromSheets(); render(); };
+  } else {
+    el.innerHTML = `
+      <span class="dot-lg off"></span>
+      <span class="sheets-status-text">Not connected — using local browser storage.${sheetsError ? ' ⚠ '+sheetsError : ''}</span>
+      <button class="btn small" id="connectBtn">Connect Google Sheets</button>
+    `;
+    document.getElementById('connectBtn').onclick = connectSheets;
+  }
+}
+
+// ---------- Recurrence helpers ----------
+function advanceDate(dateStr, recurrence){
+  const d = new Date(dateStr+'T00:00:00');
+  switch(recurrence){
+    case 'weekly': d.setDate(d.getDate()+7); break;
+    case 'biweekly': d.setDate(d.getDate()+14); break;
+    case 'monthly': d.setMonth(d.getMonth()+1); break;
+    case 'yearly': d.setFullYear(d.getFullYear()+1); break;
+    default: return null;
+  }
+  return d.toISOString().slice(0,10);
+}
+function getCurrentDue(bill){
+  if(bill.recurrence === 'none') return bill.dueDate;
+  let due = bill.dueDate;
+  let guard = 0;
+  while(bill.lastPaidDate && due <= bill.lastPaidDate && guard < 500){
+    due = advanceDate(due, bill.recurrence);
+    guard++;
+  }
+  return due;
+}
+function getBillStatus(bill){
+  if(bill.recurrence === 'none' && bill.lastPaidDate) return 'paid';
+  const due = getCurrentDue(bill);
+  const today = todayStr();
+  if(due < today) return 'overdue';
+  if(daysBetween(today, due) <= 7) return 'soon';
+  return 'upcoming';
+}
+function getOccurrencesInRange(bill, startStr, endStr){
+  const out = [];
+  let due = bill.dueDate;
+  let guard = 0;
+  while(due <= endStr && guard < 800){
+    if(due >= startStr && !(bill.recurrence==='none' && bill.lastPaidDate)){
+      out.push(due);
+    }
+    if(bill.recurrence === 'none') break;
+    due = advanceDate(due, bill.recurrence);
+    guard++;
+  }
+  return out;
+}
+
+// ---------- Render: Summary ----------
+function renderTicker(){
+  const today = todayStr();
+  const unpaidTotal = state.bills.reduce((sum,b)=>{
+    const st = getBillStatus(b);
+    return st==='paid' ? sum : sum + Number(b.amount);
+  },0);
+  const overdueTotal = state.bills.reduce((sum,b)=> getBillStatus(b)==='overdue' ? sum+Number(b.amount) : sum, 0);
+  const upcomingPaychecks = state.paychecks.filter(p=>p.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
+  const nextPay = upcomingPaychecks[0];
+
+  document.getElementById('ticker').innerHTML = `
+    <div class="summary-card">
+      <div class="summary-label"><span class="dot primary"></span>Owed / Unpaid</div>
+      <div class="summary-value">${fmtMoney(unpaidTotal)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label"><span class="dot danger"></span>Overdue</div>
+      <div class="summary-value danger">${fmtMoney(overdueTotal)}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label"><span class="dot neutral"></span>Next Paycheck</div>
+      <div class="summary-value primary" style="font-size:19px;">${nextPay ? fmtDate(nextPay.date) : '—'}</div>
+    </div>
+  `;
+}
+
+// ---------- Render: Dashboard ----------
+function renderDashboard(){
+  const today = todayStr();
+  const withStatus = state.bills.map(b=>({...b, status:getBillStatus(b), due:getCurrentDue(b)}));
+  const overdue = withStatus.filter(b=>b.status==='overdue').sort((a,b)=>a.due.localeCompare(b.due));
+  const soon = withStatus.filter(b=>b.status==='soon').sort((a,b)=>a.due.localeCompare(b.due));
+  const upcoming = withStatus.filter(b=>b.status==='upcoming').sort((a,b)=>a.due.localeCompare(b.due)).slice(0,5);
+
+  function billRow(b){
+    return `<div class="coverage-bills"><div class="cb-item"><span>${escapeHtml(b.payee)} <span class="tag">${escapeHtml(b.category)}</span></span><span>${fmtDate(b.due)} · ${fmtMoney(b.amount)}</span></div></div>`;
+  }
+
+  document.getElementById('main').innerHTML = `
+    <h2 class="section-title">Dashboard</h2>
+    <div class="section-sub">Where things stand today, ${fmtDate(today)}.</div>
+
+    <div style="margin-bottom:22px;">
+      <div style="font-size:12px; font-weight:700; color:var(--danger); margin-bottom:8px;">Overdue (${overdue.length})</div>
+      ${overdue.length ? overdue.map(billRow).join('') : '<div class="hint">Nothing overdue — all caught up.</div>'}
+    </div>
+
+    <div style="margin-bottom:22px;">
+      <div style="font-size:12px; font-weight:700; color:var(--warning); margin-bottom:8px;">Due within 7 days (${soon.length})</div>
+      ${soon.length ? soon.map(billRow).join('') : '<div class="hint">Nothing due this week.</div>'}
+    </div>
+
+    <div>
+      <div style="font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:8px;">Coming up</div>
+      ${upcoming.length ? upcoming.map(billRow).join('') : '<div class="hint">No further bills logged yet.</div>'}
+    </div>
+  `;
+}
+
+// ---------- Render: Bills ----------
+function renderBills(){
+  const withStatus = state.bills.map(b=>({...b, status:getBillStatus(b), due:getCurrentDue(b)}));
+  withStatus.sort((a,b)=> a.due.localeCompare(b.due));
+
+  const statusLabel = { overdue:'Overdue', soon:'Due Soon', upcoming:'Upcoming', paid:'Paid' };
+
+  document.getElementById('main').innerHTML = `
+    <h2 class="section-title">Bills &amp; Debts</h2>
+    <div class="section-sub">Everything you owe, in one place.</div>
+    <div class="row-actions">
+      <button class="btn" id="addBillBtn">+ Add Bill</button>
+    </div>
+    ${withStatus.length ? `
+    <div class="bill-list">
+      ${withStatus.map(b=>`
+        <div class="bill-card ${b.status}">
+          <div class="bill-main">
+            <div class="bill-payee">${escapeHtml(b.payee)}</div>
+            <div class="bill-tags">
+              <span class="tag">${escapeHtml(b.category)}</span>
+              ${b.recurrence!=='none' ? `<span class="tag">${b.recurrence}</span>`:''}
+            </div>
+          </div>
+          <div class="bill-due-amt">
+            <div class="bill-due">${fmtDate(b.due)}</div>
+            <div class="bill-amt">${fmtMoney(b.amount)}</div>
+          </div>
+          <span class="status-pill ${b.status}">${statusLabel[b.status]}</span>
+          <div class="bill-actions">
+            ${b.status!=='paid' ? `<button class="btn small" data-mark-paid="${b.id}">Mark Paid</button>` : ''}
+            <button class="btn small outline" data-edit-bill="${b.id}">Edit</button>
+            <button class="btn small danger" data-del-bill="${b.id}">Delete</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>` : `
+    <div class="empty-state">
+      <div class="glyph">📋</div>
+      No bills yet. Add one by hand, or upload a photo in chat and import the details.
+    </div>`}
+  `;
+
+  document.getElementById('addBillBtn').onclick = ()=>openBillModal();
+  withStatus.forEach(b=>{
+    const markBtn = document.querySelector(`[data-mark-paid="${b.id}"]`);
+    if(markBtn) markBtn.onclick = ()=>markPaid(b.id);
+    document.querySelector(`[data-edit-bill="${b.id}"]`).onclick = ()=>openBillModal(b.id);
+    document.querySelector(`[data-del-bill="${b.id}"]`).onclick = ()=>deleteBill(b.id);
+  });
+}
+
+function markPaid(id){
+  const bill = state.bills.find(b=>b.id===id);
+  if(!bill) return;
+  bill.lastPaidDate = getCurrentDue(bill);
+  saveState().then(render);
+}
+function deleteBill(id){
+  state.bills = state.bills.filter(b=>b.id!==id);
+  saveState().then(render);
+}
+
+// ---------- Render: Paychecks ----------
+function renderPaychecks(){
+  const today = todayStr();
+  const sorted = [...state.paychecks].sort((a,b)=>a.date.localeCompare(b.date));
+  const relevant = sorted.filter(p=>p.date>=today);
+  const displayList = relevant.length ? relevant : sorted.slice(-3);
+
+  document.getElementById('main').innerHTML = `
+    <h2 class="section-title">Paychecks</h2>
+    <div class="section-sub">What's coming in, and what it needs to cover.</div>
+    <div class="row-actions">
+      <button class="btn" id="addPayBtn">+ Add Paycheck</button>
+    </div>
+    <div id="payList"></div>
+  `;
+  document.getElementById('addPayBtn').onclick = ()=>openPayModal();
+
+  const payListEl = document.getElementById('payList');
+  if(!displayList.length){
+    payListEl.innerHTML = `<div class="empty-state"><div class="glyph">💵</div>No paychecks logged yet. Add one to see which bills it should cover.</div>`;
+    return;
+  }
+
+  payListEl.innerHTML = displayList.map((p)=>{
+    const idxInSorted = sorted.findIndex(x=>x.id===p.id);
+    const next = sorted[idxInSorted+1];
+    const coverageEnd = next ? next.date : advanceDate(p.date,'biweekly');
+    const windowStart = p.date;
+    let matched = [];
+    state.bills.forEach(b=>{
+      const occs = getOccurrencesInRange(b, windowStart, coverageEnd);
+      occs.forEach(due=>{
+        matched.push({payee:b.payee, category:b.category, amount:Number(b.amount), due});
+      });
+    });
+    const isFirstUpcoming = relevant.length && p.id === relevant[0].id;
+    if(isFirstUpcoming){
+      state.bills.forEach(b=>{
+        if(getBillStatus(b)==='overdue'){
+          matched.push({payee:b.payee, category:b.category, amount:Number(b.amount), due:getCurrentDue(b), overdue:true});
+        }
+      });
+    }
+    matched.sort((a,b)=>a.due.localeCompare(b.due));
+    const matchedTotal = matched.reduce((s,m)=>s+m.amount,0);
+    const pct = p.amount>0 ? Math.min(100, (matchedTotal/p.amount)*100) : 0;
+    const over = matchedTotal > Number(p.amount);
+    const leftover = Number(p.amount) - matchedTotal;
+
+    return `
+      <div class="paycheck-card">
+        <div class="paycheck-head">
+          <div>
+            <div class="paycheck-title">${escapeHtml(p.source)}</div>
+            <div class="paycheck-meta">${fmtDate(p.date)} → ${next ? fmtDate(next.date)+' (next paycheck)' : fmtDate(coverageEnd)+' (est.)'}</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="paycheck-amt">${fmtMoney(p.amount)}</div>
+            <button class="btn small outline" data-del-pay="${p.id}" style="margin-top:6px;">Delete</button>
+          </div>
+        </div>
+        <div class="coverage-bar"><div class="coverage-fill ${over?'over':''}" style="width:${pct}%"></div></div>
+        <div class="coverage-text">${fmtMoney(matchedTotal)} in bills matched to this check ${over ? `· short by ${fmtMoney(Math.abs(leftover))}` : `· ${fmtMoney(leftover)} left over`}</div>
+        ${matched.length ? `<div class="coverage-bills">${matched.map(m=>`
+          <div class="cb-item"><span>${escapeHtml(m.payee)}${m.overdue?' <span style="color:var(--danger)">(overdue)</span>':''}</span><span>${fmtDate(m.due)} · ${fmtMoney(m.amount)}</span></div>
+        `).join('')}</div>` : `<div class="hint">No bills fall in this window yet.</div>`}
+      </div>
+    `;
+  }).join('');
+
+  displayList.forEach(p=>{
+    const btn = document.querySelector(`[data-del-pay="${p.id}"]`);
+    if(btn) btn.onclick = ()=>{ state.paychecks = state.paychecks.filter(x=>x.id!==p.id); saveState().then(render); };
+  });
+}
+
+// ---------- Render: Calendar ----------
+function renderCalendar(){
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('main').innerHTML = `
+    <h2 class="section-title">Calendar</h2>
+    <div class="section-sub">Bills due and paychecks landing, month by month.</div>
+    <div class="cal-head">
+      <button class="btn small outline" id="prevMonth">← Prev</button>
+      <div class="month-label">${monthNames[calMonth]} ${calYear}</div>
+      <button class="btn small outline" id="nextMonth">Next →</button>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  `;
+  document.getElementById('prevMonth').onclick = ()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); };
+  document.getElementById('nextMonth').onclick = ()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); };
+
+  const grid = document.getElementById('calGrid');
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(d=>{
+    const el = document.createElement('div'); el.className='cal-dow'; el.textContent=d; grid.appendChild(el);
+  });
+
+  const firstOfMonth = new Date(calYear, calMonth, 1);
+  const startPad = firstOfMonth.getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const monthStart = `${calYear}-${String(calMonth+1).padStart(2,'0')}-01`;
+  const monthEnd = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
+
+  const dayEvents = {};
+  state.bills.forEach(b=>{
+    getOccurrencesInRange(b, monthStart, monthEnd).forEach(due=>{
+      (dayEvents[due] = dayEvents[due]||{bills:[],pays:[]}).bills.push(b);
+    });
+  });
+  state.paychecks.forEach(p=>{
+    if(p.date>=monthStart && p.date<=monthEnd){
+      (dayEvents[p.date] = dayEvents[p.date]||{bills:[],pays:[]}).pays.push(p);
+    }
+  });
+
+  for(let i=0;i<startPad;i++){
+    const pad = document.createElement('div'); pad.className='cal-day pad'; grid.appendChild(pad);
+  }
+  const today = todayStr();
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const ev = dayEvents[dateStr];
+    const cell = document.createElement('div');
+    cell.className = 'cal-day' + (dateStr===today ? ' today' : '');
+    cell.innerHTML = `<div class="dnum">${d}</div>` +
+      (ev ? `<div>${ev.bills.map(()=>'<span class="cal-dot bill"></span>').join('')}${ev.pays.map(()=>'<span class="cal-dot pay"></span>').join('')}</div>` : '');
+    if(ev){ cell.onclick = ()=>openDayModal(dateStr, ev); }
+    grid.appendChild(cell);
+  }
+}
+
+function openDayModal(dateStr, ev){
+  document.getElementById('dayModalTitle').textContent = fmtDate(dateStr);
+  let html = '';
+  if(ev.pays.length){
+    html += `<div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--success); margin-bottom:6px;">Paycheck</div>`;
+    ev.pays.forEach(p=>{ html += `<div class="coverage-bills"><div class="cb-item"><span>${escapeHtml(p.source)}</span><span>${fmtMoney(p.amount)}</span></div></div>`; });
+  }
+  if(ev.bills.length){
+    html += `<div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--danger); margin:12px 0 6px;">Due</div>`;
+    ev.bills.forEach(b=>{ html += `<div class="coverage-bills"><div class="cb-item"><span>${escapeHtml(b.payee)}</span><span>${fmtMoney(b.amount)}</span></div></div>`; });
+  }
+  document.getElementById('dayModalBody').innerHTML = html;
+  document.getElementById('dayModalBackdrop').classList.add('open');
+}
+document.getElementById('dayCloseBtn').onclick = ()=> document.getElementById('dayModalBackdrop').classList.remove('open');
+
+// ---------- Bill Modal ----------
+function openBillModal(id){
+  editingBillId = id || null;
+  document.getElementById('billModalTitle').textContent = id ? 'Edit Bill' : 'Add a Bill';
+  showManualPane();
+  if(id){
+    const b = state.bills.find(x=>x.id===id);
+    document.getElementById('f-payee').value = b.payee;
+    document.getElementById('f-amount').value = b.amount;
+    document.getElementById('f-due').value = b.dueDate;
+    document.getElementById('f-recurrence').value = b.recurrence;
+    document.getElementById('f-category').value = b.category;
+    document.getElementById('f-notes').value = b.notes||'';
+  } else {
+    document.getElementById('f-payee').value='';
+    document.getElementById('f-amount').value='';
+    document.getElementById('f-due').value=todayStr();
+    document.getElementById('f-recurrence').value='monthly';
+    document.getElementById('f-category').value='Utilities';
+    document.getElementById('f-notes').value='';
+  }
+  document.getElementById('billModalBackdrop').classList.add('open');
+}
+function closeBillModal(){ document.getElementById('billModalBackdrop').classList.remove('open'); editingBillId=null; }
+document.getElementById('billCancelBtn').onclick = closeBillModal;
+document.getElementById('importCancelBtn').onclick = closeBillModal;
+
+function showManualPane(){
+  document.getElementById('manualTabBtn').classList.add('active');
+  document.getElementById('importTabBtn').classList.remove('active');
+  document.getElementById('manualPane').style.display='block';
+  document.getElementById('importPane').style.display='none';
+}
+function showImportPane(){
+  document.getElementById('importTabBtn').classList.add('active');
+  document.getElementById('manualTabBtn').classList.remove('active');
+  document.getElementById('importPane').style.display='block';
+  document.getElementById('manualPane').style.display='none';
+  document.getElementById('importError').textContent='';
+}
+document.getElementById('manualTabBtn').onclick = showManualPane;
+document.getElementById('importTabBtn').onclick = showImportPane;
+
+document.getElementById('billSaveBtn').onclick = ()=>{
+  const payee = document.getElementById('f-payee').value.trim();
+  const amount = parseFloat(document.getElementById('f-amount').value);
+  const due = document.getElementById('f-due').value;
+  if(!payee || isNaN(amount) || !due){ alert('Please fill in payee, amount, and due date.'); return; }
+  const data = {
+    payee, amount,
+    dueDate: due,
+    recurrence: document.getElementById('f-recurrence').value,
+    category: document.getElementById('f-category').value,
+    notes: document.getElementById('f-notes').value.trim()
+  };
+  if(editingBillId){
+    const b = state.bills.find(x=>x.id===editingBillId);
+    Object.assign(b, data);
+  } else {
+    state.bills.push({ id: 'b_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), lastPaidDate:null, ...data });
+  }
+  saveState().then(()=>{ closeBillModal(); render(); });
+};
+
+document.getElementById('importSaveBtn').onclick = ()=>{
+  const raw = document.getElementById('f-import').value.trim();
+  const errEl = document.getElementById('importError');
+  errEl.textContent = '';
+  let parsed;
+  try{ parsed = JSON.parse(raw); }
+  catch(e){ errEl.textContent = "That doesn't look like valid JSON. Check for stray text outside the [ ] brackets."; return; }
+  if(!Array.isArray(parsed)){ errEl.textContent = 'Expected a JSON array of bills, e.g. [{...}, {...}].'; return; }
+  const validRecurrence = ['none','weekly','biweekly','monthly','yearly'];
+  let added = 0;
+  for(const item of parsed){
+    if(!item.payee || item.amount==null || !item.dueDate){ continue; }
+    state.bills.push({
+      id: 'b_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),
+      payee: String(item.payee),
+      amount: Number(item.amount),
+      dueDate: String(item.dueDate),
+      recurrence: validRecurrence.includes(item.recurrence) ? item.recurrence : 'none',
+      category: item.category || 'Other',
+      notes: item.notes || '',
+      lastPaidDate: null
+    });
+    added++;
+  }
+  if(added===0){ errEl.textContent = 'No valid bills found — each item needs payee, amount, and dueDate.'; return; }
+  document.getElementById('f-import').value='';
+  saveState().then(()=>{ closeBillModal(); render(); });
+};
+
+// ---------- Paycheck Modal ----------
+function openPayModal(){
+  document.getElementById('p-source').value='';
+  document.getElementById('p-amount').value='';
+  document.getElementById('p-date').value=todayStr();
+  document.getElementById('payModalBackdrop').classList.add('open');
+}
+document.getElementById('payCancelBtn').onclick = ()=> document.getElementById('payModalBackdrop').classList.remove('open');
+document.getElementById('paySaveBtn').onclick = ()=>{
+  const source = document.getElementById('p-source').value.trim();
+  const amount = parseFloat(document.getElementById('p-amount').value);
+  const date = document.getElementById('p-date').value;
+  if(!source || isNaN(amount) || !date){ alert('Please fill in source, amount, and date.'); return; }
+  state.paychecks.push({ id:'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), source, amount, date });
+  saveState().then(()=>{
+    document.getElementById('payModalBackdrop').classList.remove('open');
+    render();
+  });
+};
+
+// ---------- Tabs ----------
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  activeTab = btn.dataset.tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
+  render();
+});
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function render(){
+  renderSheetsStatus();
+  renderTicker();
+  if(activeTab==='dashboard') renderDashboard();
+  else if(activeTab==='bills') renderBills();
+  else if(activeTab==='paychecks') renderPaychecks();
+  else if(activeTab==='calendar') renderCalendar();
+}
+
+(async function init(){
+  await loadState();
+  render();
+})();
+</script>
+</body>
+</html>
