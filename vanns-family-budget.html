@@ -6,6 +6,7 @@
 <title>The Vann's Family Budget</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root{
     --bg: #F6F7FA;
@@ -60,6 +61,17 @@
     color:var(--ink);
   }
   .brand-sub{ font-size:13.5px; color:var(--ink-soft); margin-top:3px; }
+
+  .sheets-status{
+    display:flex; align-items:center; gap:10px; margin-top:16px;
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:12px 16px; box-shadow:var(--shadow-sm);
+  }
+  .sheets-status .dot-lg{ width:9px; height:9px; border-radius:50%; background:var(--ink-faint); flex-shrink:0; }
+  .sheets-status .dot-lg.on{ background:var(--success); }
+  .sheets-status .dot-lg.off{ background:var(--warning); }
+  .sheets-status-text{ font-size:12.5px; color:var(--ink-soft); flex:1; }
+  .sheets-status-text b{ color:var(--ink); }
 
   /* Summary cards */
   .summary-grid{
@@ -285,6 +297,8 @@
     </div>
   </header>
 
+  <div class="sheets-status" id="sheetsStatus"></div>
+
   <div class="summary-grid" id="ticker"></div>
 
   <nav class="tabs" id="tabs">
@@ -296,7 +310,7 @@
 
   <main id="main"></main>
 
-  <footer class="foot">Saved privately in this app · nothing is shared or sent anywhere</footer>
+  <footer class="foot">Saved in this browser, and synced to Google Sheets once connected · nothing else is shared</footer>
 </div>
 
 <!-- Bill Modal -->
@@ -402,18 +416,161 @@ function daysBetween(a,b){
   return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000);
 }
 
-// ---------- Storage ----------
-async function loadState(){
+// ================= GOOGLE SHEETS CONFIG =================
+// Paste your own values here (see the setup steps Claude gave you).
+// Until both are filled in, the app just runs on local browser storage.
+const GOOGLE_CLIENT_ID = '628928998895-uti3d3e2kggrk2uc0f4fmikoiijf6jng.apps.googleusercontent.com';
+const SPREADSHEET_ID   = '1klhDOBl5h2fYaPV1Xbhq2bTufSuNUywlshyTdWteZL8';
+// ==========================================================
+
+const SHEETS_SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
+const BILLS_RANGE = 'Bills!A2:H';
+const PAYCHECKS_RANGE = 'Paychecks!A2:D';
+const STORAGE_KEY = 'vanns-family-budget-data';
+
+let tokenClient = null;
+let accessToken = null;
+let sheetsConnected = false;
+let sheetsError = null;
+
+function isSheetsConfigured(){
+  return GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.startsWith('PASTE_') &&
+         SPREADSHEET_ID && !SPREADSHEET_ID.startsWith('PASTE_');
+}
+
+// ---------- Local cache (always used as a fallback / offline copy) ----------
+function loadLocalCache(){
   try{
-    const res = await window.storage.get('budget-data', false);
-    if(res && res.value){ state = JSON.parse(res.value); }
-  }catch(e){ /* no data yet */ }
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ state = JSON.parse(raw); }
+  }catch(e){ console.error('Local load failed', e); }
   if(!state.bills) state.bills = [];
   if(!state.paychecks) state.paychecks = [];
 }
+function saveLocalCache(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.error('Local save failed', e); }
+}
+
+// ---------- Top-level load/save used by the rest of the app ----------
+async function loadState(){
+  loadLocalCache();
+  if(isSheetsConfigured()){
+    initGoogleAuth();
+  }
+}
 async function saveState(){
-  try{ await window.storage.set('budget-data', JSON.stringify(state), false); }
-  catch(e){ console.error('Save failed', e); }
+  saveLocalCache();
+  if(sheetsConnected){ await pushToSheets(); }
+}
+
+// ---------- Google sign-in ----------
+function initGoogleAuth(){
+  if(tokenClient || !window.google || !window.google.accounts) return;
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: SHEETS_SCOPE,
+    callback: async (resp)=>{
+      if(resp.error){
+        sheetsError = 'Sign-in was cancelled or failed.';
+        renderSheetsStatus();
+        return;
+      }
+      accessToken = resp.access_token;
+      sheetsConnected = true;
+      sheetsError = null;
+      renderSheetsStatus();
+      await pullFromSheets();
+      render();
+    }
+  });
+  renderSheetsStatus();
+}
+function connectSheets(){
+  if(!isSheetsConfigured()){
+    alert('Add your Google Client ID and Spreadsheet ID at the top of the code first — see the setup steps.');
+    return;
+  }
+  if(!tokenClient) initGoogleAuth();
+  if(tokenClient) tokenClient.requestAccessToken();
+}
+
+// ---------- Sheets API ----------
+async function sheetsFetch(range, method, body){
+  const base = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${encodeURIComponent(range)}`;
+  const url = method==='PUT' ? base + '?valueInputOption=RAW' : base;
+  const res = await fetch(url, {
+    method: method || 'GET',
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type':'application/json' },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if(!res.ok){
+    const text = await res.text().catch(()=> '');
+    throw new Error(`Sheets API ${res.status}: ${text.slice(0,200)}`);
+  }
+  return res.json();
+}
+
+async function pullFromSheets(){
+  try{
+    const bills = await sheetsFetch(BILLS_RANGE, 'GET');
+    const pays = await sheetsFetch(PAYCHECKS_RANGE, 'GET');
+    state.bills = (bills.values||[]).filter(r=>r[0]).map(r=>({
+      id:r[0], payee:r[1]||'', amount:Number(r[2])||0, dueDate:r[3]||'',
+      recurrence:r[4]||'none', category:r[5]||'Other', notes:r[6]||'', lastPaidDate:r[7]||null
+    }));
+    state.paychecks = (pays.values||[]).filter(r=>r[0]).map(r=>({
+      id:r[0], source:r[1]||'', amount:Number(r[2])||0, date:r[3]||''
+    }));
+    saveLocalCache();
+    sheetsError = null;
+  }catch(e){
+    console.error('Pull failed', e);
+    sheetsError = 'Could not load from Google Sheets — check the Sheet ID and that the tabs/headers are set up correctly.';
+  }
+  renderSheetsStatus();
+}
+
+async function pushToSheets(){
+  if(!accessToken) return;
+  try{
+    const billRows = state.bills.map(b=>[b.id,b.payee,b.amount,b.dueDate,b.recurrence,b.category,b.notes||'',b.lastPaidDate||'']);
+    const payRows = state.paychecks.map(p=>[p.id,p.source,p.amount,p.date]);
+    await sheetsFetch(BILLS_RANGE, 'PUT', { range: BILLS_RANGE, majorDimension:'ROWS', values: billRows.length ? billRows : [['','','','','','','','']] });
+    await sheetsFetch(PAYCHECKS_RANGE, 'PUT', { range: PAYCHECKS_RANGE, majorDimension:'ROWS', values: payRows.length ? payRows : [['','','','']] });
+    sheetsError = null;
+  }catch(e){
+    console.error('Push failed', e);
+    sheetsError = 'Could not save to Google Sheets. Your changes are still safe in this browser — try reconnecting.';
+  }
+  renderSheetsStatus();
+}
+
+function renderSheetsStatus(){
+  const el = document.getElementById('sheetsStatus');
+  if(!el) return;
+  if(!isSheetsConfigured()){
+    el.innerHTML = `
+      <span class="dot-lg off"></span>
+      <span class="sheets-status-text">Running on <b>local browser storage</b> only. Add a Google Client ID and Sheet ID in the code to enable live sync.</span>
+    `;
+    return;
+  }
+  if(sheetsConnected){
+    el.innerHTML = `
+      <span class="dot-lg on"></span>
+      <span class="sheets-status-text"><b>Connected</b> — syncing with Google Sheets.${sheetsError ? ' ⚠ '+sheetsError : ''}</span>
+      <button class="btn small outline" id="syncNowBtn">Sync Now</button>
+    `;
+    document.getElementById('syncNowBtn').onclick = async ()=>{ await pullFromSheets(); render(); };
+  } else {
+    el.innerHTML = `
+      <span class="dot-lg off"></span>
+      <span class="sheets-status-text">Not connected — using local browser storage.${sheetsError ? ' ⚠ '+sheetsError : ''}</span>
+      <button class="btn small" id="connectBtn">Connect Google Sheets</button>
+    `;
+    document.getElementById('connectBtn').onclick = connectSheets;
+  }
 }
 
 // ---------- Recurrence helpers ----------
@@ -506,7 +663,7 @@ function renderDashboard(){
 
     <div style="margin-bottom:22px;">
       <div style="font-size:12px; font-weight:700; color:var(--danger); margin-bottom:8px;">Overdue (${overdue.length})</div>
-      ${overdue.length ? overdue.map(billRow).join('') : '<div class="hint">Nothing overdue. You\\'re all caught up.</div>'}
+      ${overdue.length ? overdue.map(billRow).join('') : '<div class="hint">Nothing overdue — all caught up.</div>'}
     </div>
 
     <div style="margin-bottom:22px;">
@@ -858,6 +1015,7 @@ function escapeHtml(str){
 }
 
 function render(){
+  renderSheetsStatus();
   renderTicker();
   if(activeTab==='dashboard') renderDashboard();
   else if(activeTab==='bills') renderBills();
