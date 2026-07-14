@@ -62,6 +62,15 @@
   }
   .brand-sub{ font-size:12.5px; color:var(--ink-soft); margin-top:6px; letter-spacing:0.2px; }
 
+  .header-shortcuts{ display:flex; gap:8px; align-self:flex-start; }
+  .header-shortcut{
+    font-family:'Inter', sans-serif; font-size:12px; font-weight:600; letter-spacing:0.2px;
+    padding:6px 13px; border-radius:20px; border:1px solid var(--border);
+    background:transparent; color:var(--ink-soft); cursor:pointer;
+  }
+  .header-shortcut:hover{ color:var(--ink); border-color:var(--ink-faint); }
+  @media (max-width:640px){ .header-shortcuts{ display:none; } }
+
   .sheets-status{
     display:flex; align-items:center; gap:10px; margin-top:20px;
     background:transparent; border-top:1px solid var(--border); border-bottom:1px solid var(--border);
@@ -336,10 +345,14 @@
 
 <div class="app">
   <header class="top">
-    <div class="brand-row">
+    <div class="brand-row" style="justify-content:space-between;">
       <div>
         <h1 class="brand">The Vann's Family Budget</h1>
         <div class="brand-sub">Bills, debts, and paychecks, all in one place.</div>
+      </div>
+      <div class="header-shortcuts" id="headerShortcuts">
+        <button class="header-shortcut" data-jump="dashboard">Dashboard</button>
+        <button class="header-shortcut" data-jump="calendar">Calendar</button>
       </div>
     </div>
   </header>
@@ -392,10 +405,15 @@
           <select id="f-category">
             <option>Mortgage</option><option>Utilities</option><option>Loans</option>
             <option>Credit Cards</option><option>Subscriptions</option><option>Insurance</option>
-            <option>Misc. Debt</option><option>Other</option>
+            <option>Expenses</option><option>Misc. Debt</option><option>Other</option>
+            <option value="__custom__">+ Custom category…</option>
           </select>
         </div>
         <div class="field"><label>Notes (optional)</label><input id="f-notes" placeholder="account #, min payment, etc."></div>
+      </div>
+      <div class="field" id="customCategoryField" style="display:none;">
+        <label>Custom category name</label>
+        <input id="f-category-custom" placeholder="e.g. Kids' Activities">
       </div>
       <div class="modal-actions">
         <button class="btn outline" id="billCancelBtn">Cancel</button>
@@ -500,7 +518,7 @@ function saveLocalCache(){
 }
 
 // ---------- Category organization ----------
-const CATEGORIES = ['Mortgage','Utilities','Loans','Credit Cards','Subscriptions','Insurance','Misc. Debt','Other'];
+const CATEGORIES = ['Mortgage','Utilities','Loans','Credit Cards','Subscriptions','Insurance','Expenses','Misc. Debt','Other'];
 const CATEGORY_MIGRATION = {
   'Rent/Mortgage': 'Mortgage',
   'Utilities': 'Utilities',
@@ -520,8 +538,7 @@ function migrateCategories(){
   let changed = false;
   state.bills.forEach(b=>{
     const mapped = CATEGORY_MIGRATION[b.category];
-    const next = mapped || 'Other';
-    if(b.category !== next){ b.category = next; changed = true; }
+    if(mapped && b.category !== mapped){ b.category = mapped; changed = true; }
   });
   return changed;
 }
@@ -704,8 +721,13 @@ function renderTicker(){
   const overdueTotal = state.bills.reduce((sum,b)=> getBillStatus(b)==='overdue' ? sum+Number(b.amount) : sum, 0);
   const upcomingPaychecks = state.paychecks.filter(p=>p.date>=today).sort((a,b)=>a.date.localeCompare(b.date));
   const nextPay = upcomingPaychecks[0];
+  const incomeTotal = upcomingPaychecks.reduce((sum,p)=>sum+Number(p.amount),0);
 
   document.getElementById('ticker').innerHTML = `
+    <div class="summary-card">
+      <div class="summary-label"><span class="dot neutral"></span>Income</div>
+      <div class="summary-value">${fmtMoney(incomeTotal)}</div>
+    </div>
     <div class="summary-card">
       <div class="summary-label"><span class="dot primary"></span>Owed / Unpaid</div>
       <div class="summary-value">${fmtMoney(unpaidTotal)}</div>
@@ -715,7 +737,7 @@ function renderTicker(){
       <div class="summary-value danger">${fmtMoney(overdueTotal)}</div>
     </div>
     <div class="summary-card">
-      <div class="summary-label"><span class="dot neutral"></span>Next Paycheck</div>
+      <div class="summary-label"><span class="dot neutral"></span>Upcoming</div>
       <div class="summary-value primary" style="font-size:19px;">${nextPay ? fmtDate(nextPay.date) : '—'}</div>
     </div>
   `;
@@ -803,10 +825,13 @@ function renderBills(){
   const withStatus = state.bills.map(b=>({...b, status:getBillStatus(b), due:getCurrentDue(b)}));
   const statusLabel = { overdue:'Overdue', soon:'Due Soon', upcoming:'Upcoming', paid:'Paid' };
 
+  const customCats = [...new Set(withStatus.map(b=>b.category).filter(c=>!CATEGORIES.includes(c)))].sort();
+  const orderedCats = [...CATEGORIES.slice(0, -1), ...customCats, 'Other'];
+
   const groups = {};
-  CATEGORIES.forEach(c=>{ groups[c] = []; });
+  orderedCats.forEach(c=>{ groups[c] = []; });
   withStatus.forEach(b=>{
-    const cat = CATEGORIES.includes(b.category) ? b.category : 'Other';
+    const cat = orderedCats.includes(b.category) ? b.category : 'Other';
     groups[cat].push(b);
   });
   Object.values(groups).forEach(list=>list.sort((a,b)=>a.due.localeCompare(b.due)));
@@ -835,7 +860,7 @@ function renderBills(){
     `;
   }
 
-  const sectionsHtml = CATEGORIES.map(cat=>{
+  const sectionsHtml = orderedCats.map(cat=>{
     const list = groups[cat];
     if(!list.length) return '';
     const subtotal = list.reduce((s,b)=> b.status==='paid' ? s : s+Number(b.amount), 0);
@@ -1035,20 +1060,33 @@ function openBillModal(id){
   editingBillId = id || null;
   document.getElementById('billModalTitle').textContent = id ? 'Edit Bill' : 'Add a Bill';
   showManualPane();
+  const catSelect = document.getElementById('f-category');
+  const customField = document.getElementById('customCategoryField');
+  const customInput = document.getElementById('f-category-custom');
   if(id){
     const b = state.bills.find(x=>x.id===id);
     document.getElementById('f-payee').value = b.payee;
     document.getElementById('f-amount').value = b.amount;
     document.getElementById('f-due').value = b.dueDate;
     document.getElementById('f-recurrence').value = b.recurrence;
-    document.getElementById('f-category').value = b.category;
+    if(CATEGORIES.includes(b.category)){
+      catSelect.value = b.category;
+      customField.style.display = 'none';
+      customInput.value = '';
+    } else {
+      catSelect.value = '__custom__';
+      customField.style.display = 'block';
+      customInput.value = b.category;
+    }
     document.getElementById('f-notes').value = b.notes||'';
   } else {
     document.getElementById('f-payee').value='';
     document.getElementById('f-amount').value='';
     document.getElementById('f-due').value=todayStr();
     document.getElementById('f-recurrence').value='monthly';
-    document.getElementById('f-category').value='Utilities';
+    catSelect.value='Utilities';
+    customField.style.display = 'none';
+    customInput.value = '';
     document.getElementById('f-notes').value='';
   }
   document.getElementById('billModalBackdrop').classList.add('open');
@@ -1072,17 +1110,24 @@ function showImportPane(){
 }
 document.getElementById('manualTabBtn').onclick = showManualPane;
 document.getElementById('importTabBtn').onclick = showImportPane;
+document.getElementById('f-category').onchange = (e)=>{
+  document.getElementById('customCategoryField').style.display = e.target.value==='__custom__' ? 'block' : 'none';
+};
 
 document.getElementById('billSaveBtn').onclick = ()=>{
   const payee = document.getElementById('f-payee').value.trim();
   const amount = parseFloat(document.getElementById('f-amount').value);
   const due = document.getElementById('f-due').value;
   if(!payee || isNaN(amount) || !due){ alert('Please fill in payee, amount, and due date.'); return; }
+  let category = document.getElementById('f-category').value;
+  if(category === '__custom__'){
+    category = document.getElementById('f-category-custom').value.trim() || 'Other';
+  }
   const data = {
     payee, amount,
     dueDate: due,
     recurrence: document.getElementById('f-recurrence').value,
-    category: document.getElementById('f-category').value,
+    category,
     notes: document.getElementById('f-notes').value.trim()
   };
   if(editingBillId){
@@ -1150,6 +1195,15 @@ document.getElementById('tabs').addEventListener('click', (e)=>{
   activeTab = btn.dataset.tab;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b===btn));
   render();
+});
+
+document.getElementById('headerShortcuts').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.header-shortcut');
+  if(!btn) return;
+  activeTab = btn.dataset.jump;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===activeTab));
+  render();
+  window.scrollTo({top:0, behavior:'smooth'});
 });
 
 function escapeHtml(str){
